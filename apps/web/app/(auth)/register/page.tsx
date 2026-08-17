@@ -20,7 +20,10 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { register as registerUser } from '@/features/auth/api';
+import {
+  getMe,
+  register as registerUser,
+} from '@/features/auth/api';
 import { registerSchema } from '@/features/auth/schemas';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -31,6 +34,9 @@ export default function RegisterPage() {
 
   const setAccessToken = useAuthStore(
     (state) => state.setAccessToken,
+  );
+  const setUser = useAuthStore(
+    (state) => state.setUser,
   );
 
   const [serverError, setServerError] = useState<string | null>(
@@ -68,6 +74,9 @@ export default function RegisterPage() {
       });
 
       setAccessToken(result.accessToken);
+
+      const me = await getMe();
+      setUser(me);
 
       router.replace('/dashboard');
     } catch (error: any) {

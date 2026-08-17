@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
@@ -10,6 +12,8 @@ import {
   Req,
 } from '@nestjs/common';
 
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -60,6 +64,14 @@ export class AuthController {
       path: '/api/auth',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async me(
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.authService.getCurrentUser(user.id);
   }
 
   @Post('refresh')

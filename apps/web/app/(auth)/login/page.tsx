@@ -18,8 +18,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { loginSchema } from '@/features/auth/schemas';
-import { login } from '@/features/auth/api';
-import { useAuthStore } from '@/stores/auth.store';
+import { getMe, login } from '@/features/auth/api';
+import {
+  useAuthStore,
+} from '@/stores/auth.store';
 
 import type { z } from 'zod';
 
@@ -30,6 +32,9 @@ export default function LoginPage() {
 
   const setAccessToken =
     useAuthStore((state) => state.setAccessToken);
+  const setUser = useAuthStore(
+    (state) => state.setUser,
+  );
 
   const {
     register: registerField,
@@ -49,7 +54,10 @@ export default function LoginPage() {
 
       setAccessToken(result.accessToken);
 
-      router.push('/dashboard');
+      const me = await getMe();
+      setUser(me);
+
+      router.replace('/dashboard');
     } catch {
       setError('root', {
         message: 'Invalid email or password',

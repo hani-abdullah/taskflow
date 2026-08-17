@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import EmotionRegistry from './EmotionRegistry';
 import { AppProviders } from '@/providers/app-providers';
 
 export const metadata: Metadata = {
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AppProviders>
-          {children}
-        </AppProviders>
+        <EmotionRegistry>
+          <AppProviders>
+            {children}
+          </AppProviders>
+        </EmotionRegistry>
       </body>
     </html>
   );

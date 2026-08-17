@@ -78,6 +78,25 @@ export class AuthService {
     return this.createAuthResponse(user.id, user.email);
   }
 
+  async getCurrentUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
+  }
+
   private async createAuthResponse(userId: string, email: string) {
     const accessToken = await this.jwtService.signAsync(
       {
