@@ -11,6 +11,10 @@ import {
 } from '@mui/material';
 
 import {
+  useEffect,
+} from 'react';
+
+import {
   useForm,
 } from 'react-hook-form';
 
@@ -18,35 +22,44 @@ import {
   zodResolver,
 } from '@hookform/resolvers/zod';
 
-import { z } from 'zod';
+import {
+  z,
+} from 'zod';
 
-const schema = z.object({
-  name: z
-    .string()
-    .min(1, 'Name is required')
-    .max(100),
+const schema =
+  z.object({
+    name: z
+      .string()
+      .min(
+        1,
+        'Name is required',
+      )
+      .max(100),
 
-  description: z
-    .string()
-    .max(1000)
-    .optional(),
-});
+    description: z
+      .string()
+      .max(1000)
+      .optional(),
+  });
 
-type FormData =
+export type CreateProjectFormData =
   z.infer<typeof schema>;
 
 interface Props {
   open: boolean;
+
   loading?: boolean;
+
   onClose: () => void;
+
   onSubmit: (
-    data: FormData,
+    data: CreateProjectFormData,
   ) => void;
 }
 
 export function CreateProjectDialog({
   open,
-  loading,
+  loading = false,
   onClose,
   onSubmit,
 }: Props) {
@@ -57,24 +70,33 @@ export function CreateProjectDialog({
     formState: {
       errors,
     },
-  } = useForm<FormData>({
+  } = useForm<CreateProjectFormData>({
     resolver:
       zodResolver(schema),
+
     defaultValues: {
       name: '',
       description: '',
     },
   });
 
-  const close = () => {
-    reset();
-    onClose();
-  };
+  useEffect(() => {
+    if (!open) {
+      reset();
+    }
+  }, [
+    open,
+    reset,
+  ]);
 
   return (
     <Dialog
       open={open}
-      onClose={close}
+      onClose={() => {
+        if (!loading) {
+          onClose();
+        }
+      }}
       fullWidth
       maxWidth="sm"
     >
@@ -88,9 +110,13 @@ export function CreateProjectDialog({
           sx={{ pt: 1 }}
         >
           <TextField
+            autoFocus
             label="Name"
+            fullWidth
             {...register('name')}
-            error={!!errors.name}
+            error={
+              !!errors.name
+            }
             helperText={
               errors.name?.message
             }
@@ -98,6 +124,7 @@ export function CreateProjectDialog({
 
           <TextField
             label="Description"
+            fullWidth
             multiline
             minRows={4}
             {...register(
@@ -114,7 +141,10 @@ export function CreateProjectDialog({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={close}>
+        <Button
+          onClick={onClose}
+          disabled={loading}
+        >
           Cancel
         </Button>
 
@@ -122,10 +152,7 @@ export function CreateProjectDialog({
           variant="contained"
           disabled={loading}
           onClick={handleSubmit(
-            (data) => {
-              onSubmit(data);
-              reset();
-            },
+            onSubmit,
           )}
         >
           {loading
