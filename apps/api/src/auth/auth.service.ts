@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -12,6 +13,7 @@ import type { StringValue } from 'ms';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { generateSecureToken, hashToken } from './utils/token.util';
 
 @Injectable()
 export class AuthService {
@@ -19,7 +21,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
@@ -42,6 +44,13 @@ export class AuthService {
         lastName: dto.lastName,
       },
     });
+
+    const verificationToken =
+      await this.createEmailVerificationToken(user.id);
+
+    console.log(
+      `Email verification token: ${verificationToken}`,
+    );
 
     return this.createAuthResponse(user.id, user.email);
   }
@@ -71,19 +80,19 @@ export class AuthService {
 
   private async createAuthResponse(userId: string, email: string) {
     const accessToken = await this.jwtService.signAsync(
-  {
-    sub: userId,
-    email,
-    type: 'access',
-  },
-  {
-    secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
-    expiresIn: this.config.get<StringValue>(
-      'JWT_ACCESS_EXPIRES_IN',
-      '15m',
-    ),
-  },
-);
+      {
+        sub: userId,
+        email,
+        type: 'access',
+      },
+      {
+        secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
+        expiresIn: this.config.get<StringValue>(
+          'JWT_ACCESS_EXPIRES_IN',
+          '15m',
+        ),
+      },
+    );
 
     const refreshToken = randomBytes(64).toString('hex');
 
@@ -104,6 +113,273 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
+    };
+  }
+
+  async refresh(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    const sessions = await this.prisma.session.findMany({
+      where: {
+        revokedAt: null,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    let matchedSession:
+      | (typeof sessions)[number]
+      | undefined;
+
+    for (const session of sessions) {
+      const valid = await argon2.verify(
+        session.tokenHash,
+        refreshToken,
+      );
+
+      if (valid) {
+        matchedSession = session;
+        break;
+      }
+    }
+
+    if (!matchedSession) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    await this.prisma.session.update({
+      where: {
+        id: matchedSession.id,
+      },
+      data: {
+        revokedAt: new Date(),
+      },
+    });
+
+    return this.createAuthResponse(
+      matchedSession.user.id,
+      matchedSession.user.email,
+    );
+  }
+  async logout(refreshToken: string) {
+    if (!refreshToken) {
+      return;
+    }
+
+    const sessions = await this.prisma.session.findMany({
+      where: {
+        revokedAt: null,
+      },
+    });
+
+    for (const session of sessions) {
+      const valid = await argon2.verify(
+        session.tokenHash,
+        refreshToken,
+      );
+
+      if (valid) {
+        await this.prisma.session.update({
+          where: {
+            id: session.id,
+          },
+          data: {
+            revokedAt: new Date(),
+          },
+        });
+
+        break;
+      }
+    }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        email: email.toLowerCase(),
+      },
+    });
+
+    // Don't reveal whether the email exists.
+    if (!user) {
+      return {
+        success: true,
+      };
+    }
+
+    const token = generateSecureToken();
+    const tokenHash = hashToken(token);
+
+    const expiresAt = new Date(
+      Date.now() + 30 * 60 * 1000,
+    );
+
+    await this.prisma.passwordResetToken.deleteMany({
+      where: {
+        userId: user.id,
+        usedAt: null,
+      },
+    });
+
+    await this.prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    // Email service comes in the next phase.
+    console.log(
+      `Password reset token for development: ${token}`,
+    );
+
+    return {
+      success: true,
+    };
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ) {
+    const tokenHash = hashToken(token);
+
+    const resetToken =
+      await this.prisma.passwordResetToken.findUnique({
+        where: {
+          tokenHash,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+    if (
+      !resetToken ||
+      resetToken.usedAt ||
+      resetToken.expiresAt < new Date()
+    ) {
+      throw new BadRequestException(
+        'Invalid or expired reset token',
+      );
+    }
+
+    const passwordHash = await argon2.hash(
+      newPassword,
+    );
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: {
+          id: resetToken.userId,
+        },
+        data: {
+          passwordHash,
+        },
+      }),
+
+      this.prisma.passwordResetToken.update({
+        where: {
+          id: resetToken.id,
+        },
+        data: {
+          usedAt: new Date(),
+        },
+      }),
+
+      this.prisma.session.updateMany({
+        where: {
+          userId: resetToken.userId,
+          revokedAt: null,
+        },
+        data: {
+          revokedAt: new Date(),
+        },
+      }),
+    ]);
+
+    return {
+      success: true,
+    };
+  }
+
+  async createEmailVerificationToken(
+    userId: string,
+  ) {
+    const token = generateSecureToken();
+    const tokenHash = hashToken(token);
+
+    const expiresAt = new Date(
+      Date.now() + 24 * 60 * 60 * 1000,
+    );
+
+    await this.prisma.emailVerificationToken.deleteMany({
+      where: {
+        userId,
+        usedAt: null,
+      },
+    });
+
+    await this.prisma.emailVerificationToken.create({
+      data: {
+        userId,
+        tokenHash,
+        expiresAt,
+      },
+    });
+
+    return token;
+  }
+
+  async verifyEmail(token: string) {
+    const tokenHash = hashToken(token);
+
+    const verificationToken =
+      await this.prisma.emailVerificationToken.findUnique({
+        where: {
+          tokenHash,
+        },
+      });
+
+    if (
+      !verificationToken ||
+      verificationToken.usedAt ||
+      verificationToken.expiresAt < new Date()
+    ) {
+      throw new BadRequestException(
+        'Invalid or expired verification token',
+      );
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: {
+          id: verificationToken.userId,
+        },
+        data: {
+          emailVerifiedAt: new Date(),
+        },
+      }),
+
+      this.prisma.emailVerificationToken.update({
+        where: {
+          id: verificationToken.id,
+        },
+        data: {
+          usedAt: new Date(),
+        },
+      }),
+    ]);
+
+    return {
+      success: true,
     };
   }
 }
