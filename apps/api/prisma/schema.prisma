@@ -54,6 +54,7 @@ model Session {
   userId    String
   tokenHash String   @unique
   expiresAt DateTime
+  revokedAt DateTime?
 
   createdAt DateTime @default(now())
 
@@ -61,7 +62,6 @@ model Session {
 
   @@index([userId])
 }
-
 model Project {
   id          String   @id @default(cuid())
   name        String
