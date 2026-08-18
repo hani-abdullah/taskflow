@@ -84,41 +84,20 @@ export class TasksService {
     });
 
     if (assignee) {
-      await this.queueService.createNotification({
-        userId: assignee.id,
-        type: NotificationType.TASK_ASSIGNED,
-        title: 'New task assigned',
-        message: `You were assigned "${task.title}".`,
-        metadata: {
-          taskId: task.id,
-          projectId: task.projectId,
-        },
-      });
-
-      await this.queueService.sendEmail({
-        to: assignee.email,
-        subject: `Task assigned: ${task.title}`,
-        html: `
-          <h1>New task assigned</h1>
-          <p>
-            You were assigned:
-            <strong>${task.title}</strong>
-          </p>
-        `,
-      });
+      await this.enqueueTaskAssignment(task, assignee);
     }
 
     return task;
   }
 
   async update(userId: string, taskId: string, dto: UpdateTaskDto) {
-    await this.findOne(userId, taskId);
+    const existingTask = await this.findOne(userId, taskId);
 
-    if (dto.assigneeId) {
-      await this.ensureUserExists(dto.assigneeId);
-    }
+    const assignee = dto.assigneeId
+      ? await this.ensureUserExists(dto.assigneeId)
+      : null;
 
-    return this.prisma.task.update({
+    const task = await this.prisma.task.update({
       where: {
         id: taskId,
       },
@@ -127,6 +106,12 @@ export class TasksService {
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
       },
     });
+
+    if (assignee && assignee.id !== existingTask.assigneeId) {
+      await this.enqueueTaskAssignment(task, assignee);
+    }
+
+    return task;
   }
 
   async remove(userId: string, taskId: string) {
@@ -170,5 +155,33 @@ export class TasksService {
     }
 
     return user;
+  }
+
+  private async enqueueTaskAssignment(
+    task: { id: string; title: string; projectId: string },
+    assignee: { id: string; email: string },
+  ) {
+    await this.queueService.createNotification({
+      userId: assignee.id,
+      type: NotificationType.TASK_ASSIGNED,
+      title: 'New task assigned',
+      message: `You were assigned "${task.title}".`,
+      metadata: {
+        taskId: task.id,
+        projectId: task.projectId,
+      },
+    });
+
+    await this.queueService.sendEmail({
+      to: assignee.email,
+      subject: `Task assigned: ${task.title}`,
+      html: `
+        <h1>New task assigned</h1>
+        <p>
+          You were assigned:
+          <strong>${task.title}</strong>
+        </p>
+      `,
+    });
   }
 }

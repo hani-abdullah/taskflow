@@ -439,6 +439,10 @@ export default function ProjectIdPage() {
           dueDate:
             data.dueDate ||
             undefined,
+
+          assigneeId:
+            data.assigneeId ||
+            null,
         },
       });
 
@@ -460,6 +464,10 @@ export default function ProjectIdPage() {
 
       dueDate:
         data.dueDate ||
+        undefined,
+
+      assigneeId:
+        data.assigneeId ||
         undefined,
 
       projectId,

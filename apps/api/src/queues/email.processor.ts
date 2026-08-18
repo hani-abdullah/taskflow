@@ -1,4 +1,4 @@
-import { Processor } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 
 import { Job } from 'bullmq';
 
@@ -15,8 +15,10 @@ interface EmailJob {
 }
 
 @Processor(EMAIL_QUEUE)
-export class EmailProcessor {
-  constructor(private readonly emailService: EmailService) {}
+export class EmailProcessor extends WorkerHost {
+  constructor(private readonly emailService: EmailService) {
+    super();
+  }
 
   async process(job: Job<EmailJob>) {
     await this.emailService.sendEmail({

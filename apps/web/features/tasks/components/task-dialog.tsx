@@ -16,12 +16,14 @@ import {
 } from '@mui/material';
 
 import {
+  Controller,
   useForm,
 } from 'react-hook-form';
 
 import {
   zodResolver,
 } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
 
 import {
   Task,
@@ -31,6 +33,7 @@ import {
   taskSchema,
   TaskFormData,
 } from '../schemas';
+import { getUsers } from '@/features/users/api';
 
 interface Props {
   open: boolean;
@@ -53,8 +56,15 @@ export function TaskDialog({
   onClose,
   onSubmit,
 }: Props) {
+  const { data: users = [], isLoading: usersLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: getUsers,
+    enabled: open,
+  });
+
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: {
@@ -69,6 +79,7 @@ export function TaskDialog({
       description: '',
       priority: 'MEDIUM',
       dueDate: '',
+      assigneeId: '',
     },
   });
 
@@ -92,6 +103,8 @@ export function TaskDialog({
             10,
           )
         : '',
+
+      assigneeId: task?.assigneeId ?? '',
     });
   }, [
     task,
@@ -155,32 +168,63 @@ export function TaskDialog({
             }
           />
 
-          <TextField
-            select
-            label="Priority"
-            fullWidth
-            {...register(
-              'priority',
+          <Controller
+            name="priority"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                select
+                label="Priority"
+                fullWidth
+                {...field}
+                value={field.value ?? 'MEDIUM'}
+                error={!!errors.priority}
+                helperText={errors.priority?.message}
+              >
+                <MenuItem value="LOW">
+                  Low
+                </MenuItem>
+
+                <MenuItem value="MEDIUM">
+                  Medium
+                </MenuItem>
+
+                <MenuItem value="HIGH">
+                  High
+                </MenuItem>
+              </TextField>
             )}
-            error={
-              !!errors.priority
-            }
-            helperText={
-              errors.priority?.message
-            }
-          >
-            <MenuItem value="LOW">
-              Low
-            </MenuItem>
+          />
 
-            <MenuItem value="MEDIUM">
-              Medium
-            </MenuItem>
+          <Controller
+            name="assigneeId"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                select
+                label="Assignee"
+                fullWidth
+                {...field}
+                value={field.value ?? ''}
+                disabled={usersLoading}
+                helperText={usersLoading ? 'Loading users...' : undefined}
+              >
+                <MenuItem value="">
+                  Unassigned
+                </MenuItem>
 
-            <MenuItem value="HIGH">
-              High
-            </MenuItem>
-          </TextField>
+                {users.map((user) => {
+                  const fullName = `${user.firstName} ${user.lastName}`.trim();
+
+                  return (
+                    <MenuItem key={user.id} value={user.id}>
+                      {fullName || user.email} ({user.email})
+                    </MenuItem>
+                  );
+                })}
+              </TextField>
+            )}
+          />
 
           <TextField
             label="Due date"

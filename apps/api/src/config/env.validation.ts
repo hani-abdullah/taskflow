@@ -18,4 +18,20 @@ export const envValidationSchema = Joi.object({
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
 
   FRONTEND_URL: Joi.string().uri().required(),
+
+  REDIS_HOST: Joi.string().default('localhost'),
+
+  REDIS_PORT: Joi.number().port().default(6379),
+
+  EMAIL_FROM: Joi.string().email().default('no-reply@example.com'),
+
+  SMTP_HOST: Joi.string().default('127.0.0.1'),
+
+  SMTP_PORT: Joi.number().port().default(1025),
+
+  SMTP_USER: Joi.string().allow('').default(''),
+
+  SMTP_PASSWORD: Joi.string().allow('').default(''),
+
+  SMTP_SECURE: Joi.boolean().default(false),
 });

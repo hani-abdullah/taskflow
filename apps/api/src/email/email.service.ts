@@ -10,12 +10,14 @@ export class EmailService {
   private readonly transporter: Transporter<SMTPTransport.SentMessageInfo>;
 
   constructor(private readonly config: ConfigService) {
+    const smtpSecure = this.config.get<string | boolean>('SMTP_SECURE', false);
+
     this.transporter = nodemailer.createTransport({
-      host: this.config.get<string>('SMTP_HOST', 'localhost'),
+      host: this.config.get<string>('SMTP_HOST', '127.0.0.1'),
 
       port: this.config.get<number>('SMTP_PORT', 1025),
 
-      secure: this.config.get<boolean>('SMTP_SECURE', false),
+      secure: smtpSecure === true || smtpSecure === 'true',
 
       auth: this.config.get<string>('SMTP_USER')
         ? {

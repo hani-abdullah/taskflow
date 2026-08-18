@@ -1,4 +1,4 @@
-import { Processor } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 
 import { Job } from 'bullmq';
 
@@ -21,8 +21,10 @@ interface NotificationJob {
 }
 
 @Processor(NOTIFICATION_QUEUE)
-export class NotificationProcessor {
-  constructor(private readonly notificationsService: NotificationsService) {}
+export class NotificationProcessor extends WorkerHost {
+  constructor(private readonly notificationsService: NotificationsService) {
+    super();
+  }
 
   async process(job: Job<NotificationJob>) {
     await this.notificationsService.create({

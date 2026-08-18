@@ -20,6 +20,10 @@ export const taskSchema = z.object({
   dueDate: z
     .string()
     .optional(),
+
+  assigneeId: z
+    .string()
+    .optional(),
 });
 
 export type TaskFormData =

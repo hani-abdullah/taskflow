@@ -81,7 +81,7 @@ export interface UpdateTaskInput {
 
   dueDate?: string;
 
-  assigneeId?: string;
+  assigneeId?: string | null;
 }
 
 export async function getTasks(
