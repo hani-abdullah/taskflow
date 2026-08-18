@@ -4,16 +4,16 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import { randomBytes } from 'crypto';
-import type { StringValue } from 'ms';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { generateSecureToken, hashToken } from './utils/token.util';
+import { QueueService } from '../queues/queue.service';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +21,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
-  ) { }
+    private readonly queueService: QueueService,
+  ) {}
 
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
@@ -45,12 +46,18 @@ export class AuthService {
       },
     });
 
-    const verificationToken =
-      await this.createEmailVerificationToken(user.id);
+    const verificationToken = await this.createEmailVerificationToken(user.id);
 
-    console.log(
-      `Email verification token: ${verificationToken}`,
-    );
+    console.log(`Email verification token: ${verificationToken}`);
+
+    await this.queueService.sendEmail({
+      to: user.email,
+      subject: 'Welcome to our app',
+      html: `
+        <h1>Welcome!</h1>
+        <p>Your account is ready.</p>
+      `,
+    });
 
     return this.createAuthResponse(user.id, user.email);
   }
@@ -66,10 +73,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const validPassword = await argon2.verify(
-      user.passwordHash,
-      dto.password,
-    );
+    const validPassword = await argon2.verify(user.passwordHash, dto.password);
 
     if (!validPassword) {
       throw new UnauthorizedException('Invalid credentials');
@@ -106,7 +110,7 @@ export class AuthService {
       },
       {
         secret: this.config.getOrThrow<string>('JWT_ACCESS_SECRET'),
-        expiresIn: this.config.get<StringValue>(
+        expiresIn: this.config.get<NonNullable<JwtSignOptions['expiresIn']>>(
           'JWT_ACCESS_EXPIRES_IN',
           '15m',
         ),
@@ -152,15 +156,10 @@ export class AuthService {
       },
     });
 
-    let matchedSession:
-      | (typeof sessions)[number]
-      | undefined;
+    let matchedSession: (typeof sessions)[number] | undefined;
 
     for (const session of sessions) {
-      const valid = await argon2.verify(
-        session.tokenHash,
-        refreshToken,
-      );
+      const valid = await argon2.verify(session.tokenHash, refreshToken);
 
       if (valid) {
         matchedSession = session;
@@ -198,10 +197,7 @@ export class AuthService {
     });
 
     for (const session of sessions) {
-      const valid = await argon2.verify(
-        session.tokenHash,
-        refreshToken,
-      );
+      const valid = await argon2.verify(session.tokenHash, refreshToken);
 
       if (valid) {
         await this.prisma.session.update({
@@ -235,9 +231,7 @@ export class AuthService {
     const token = generateSecureToken();
     const tokenHash = hashToken(token);
 
-    const expiresAt = new Date(
-      Date.now() + 30 * 60 * 1000,
-    );
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
     await this.prisma.passwordResetToken.deleteMany({
       where: {
@@ -255,44 +249,30 @@ export class AuthService {
     });
 
     // Email service comes in the next phase.
-    console.log(
-      `Password reset token for development: ${token}`,
-    );
+    console.log(`Password reset token for development: ${token}`);
 
     return {
       success: true,
     };
   }
 
-  async resetPassword(
-    token: string,
-    newPassword: string,
-  ) {
+  async resetPassword(token: string, newPassword: string) {
     const tokenHash = hashToken(token);
 
-    const resetToken =
-      await this.prisma.passwordResetToken.findUnique({
-        where: {
-          tokenHash,
-        },
-        include: {
-          user: true,
-        },
-      });
+    const resetToken = await this.prisma.passwordResetToken.findUnique({
+      where: {
+        tokenHash,
+      },
+      include: {
+        user: true,
+      },
+    });
 
-    if (
-      !resetToken ||
-      resetToken.usedAt ||
-      resetToken.expiresAt < new Date()
-    ) {
-      throw new BadRequestException(
-        'Invalid or expired reset token',
-      );
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+      throw new BadRequestException('Invalid or expired reset token');
     }
 
-    const passwordHash = await argon2.hash(
-      newPassword,
-    );
+    const passwordHash = await argon2.hash(newPassword);
 
     await this.prisma.$transaction([
       this.prisma.user.update({
@@ -329,15 +309,11 @@ export class AuthService {
     };
   }
 
-  async createEmailVerificationToken(
-    userId: string,
-  ) {
+  async createEmailVerificationToken(userId: string) {
     const token = generateSecureToken();
     const tokenHash = hashToken(token);
 
-    const expiresAt = new Date(
-      Date.now() + 24 * 60 * 60 * 1000,
-    );
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await this.prisma.emailVerificationToken.deleteMany({
       where: {
@@ -372,9 +348,7 @@ export class AuthService {
       verificationToken.usedAt ||
       verificationToken.expiresAt < new Date()
     ) {
-      throw new BadRequestException(
-        'Invalid or expired verification token',
-      );
+      throw new BadRequestException('Invalid or expired verification token');
     }
 
     await this.prisma.$transaction([

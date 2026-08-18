@@ -10,15 +10,33 @@ export default function EmotionRegistry({
 }: {
   children: React.ReactNode;
 }) {
-  const [{ cache }] = useState(() => {
+  const [{ cache, flush }] = useState(() => {
     const cache = createCache({ key: 'mui', prepend: true });
     cache.compat = true;
+    const originalInsert = cache.insert;
+    let inserted: string[] = [];
 
-    return { cache };
+    cache.insert = (...args) => {
+      const serialized = args[1];
+
+      if (cache.inserted[serialized.name] === undefined) {
+        inserted.push(serialized.name);
+      }
+
+      return originalInsert(...args);
+    };
+
+    const flush = () => {
+      const names = inserted;
+      inserted = [];
+      return names;
+    };
+
+    return { cache, flush };
   });
 
   useServerInsertedHTML(() => {
-    const inserted = Object.keys(cache.inserted);
+    const inserted = flush();
 
     if (inserted.length === 0) {
       return null;
@@ -27,8 +45,6 @@ export default function EmotionRegistry({
     const styles = inserted
       .map((key) => cache.inserted[key])
       .join(' ');
-
-    cache.inserted = {};
 
     return (
       <style

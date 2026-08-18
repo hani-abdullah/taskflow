@@ -6,22 +6,14 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { QueuesModule } from '../queues/queues.module';
 
 @Module({
-  imports: [
-    ConfigModule,
-
-    PassportModule,
-
-    JwtModule.register({}),
-  ],
+  imports: [ConfigModule, PassportModule, JwtModule.register({}), QueuesModule],
 
   controllers: [AuthController],
 
-  providers: [
-    AuthService,
-    JwtStrategy,
-  ],
+  providers: [AuthService, JwtStrategy],
 
   exports: [AuthService],
 })

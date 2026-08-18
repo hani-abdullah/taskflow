@@ -1,16 +1,7 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
-import {
-  Req,
-} from '@nestjs/common';
+import { Req } from '@nestjs/common';
 
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -21,9 +12,13 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
+interface RequestWithRefreshCookie extends Request {
+  cookies: { refresh_token?: unknown };
+}
+
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   async register(
@@ -53,10 +48,7 @@ export class AuthController {
     };
   }
 
-  private setRefreshCookie(
-    response: Response,
-    refreshToken: string,
-  ) {
+  private setRefreshCookie(response: Response, refreshToken: string) {
     response.cookie('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -68,37 +60,38 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  async me(
-    @CurrentUser() user: { id: string },
-  ) {
+  async me(@CurrentUser() user: { id: string }) {
     return this.authService.getCurrentUser(user.id);
   }
 
   @Post('refresh')
   async refresh(
-    @Req() request: Request,
+    @Req() request: RequestWithRefreshCookie,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = request.cookies?.refresh_token;
+    const refreshToken =
+      typeof request.cookies.refresh_token === 'string'
+        ? request.cookies.refresh_token
+        : '';
 
     const result = await this.authService.refresh(refreshToken);
 
-    this.setRefreshCookie(
-      response,
-      result.refreshToken,
-    );
+    this.setRefreshCookie(response, result.refreshToken);
 
     return {
       accessToken: result.accessToken,
     };
   }
-  
+
   @Post('logout')
   async logout(
-    @Req() request: Request,
+    @Req() request: RequestWithRefreshCookie,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const refreshToken = request.cookies?.refresh_token;
+    const refreshToken =
+      typeof request.cookies.refresh_token === 'string'
+        ? request.cookies.refresh_token
+        : '';
 
     await this.authService.logout(refreshToken);
 
@@ -115,31 +108,17 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-async forgotPassword(
-  @Body() dto: ForgotPasswordDto,
-) {
-  return this.authService.forgotPassword(
-    dto.email,
-  );
-}
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
 
-@Post('reset-password')
-async resetPassword(
-  @Body() dto: ResetPasswordDto,
-) {
-  return this.authService.resetPassword(
-    dto.token,
-    dto.password,
-  );
-}
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
+  }
 
-@Post('verify-email')
-async verifyEmail(
-  @Body() dto: VerifyEmailDto,
-) {
-  return this.authService.verifyEmail(
-    dto.token,
-  );
-}
-
+  @Post('verify-email')
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto.token);
+  }
 }

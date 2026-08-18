@@ -7,10 +7,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-import {
-  TaskPriority,
-  TaskStatus,
-} from '@prisma/client';
+import { TaskPriority, TaskStatus } from '@prisma/client';
 
 export class UpdateTaskDto {
   @IsOptional()

@@ -19,6 +19,7 @@ import {
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
 
 import {
   getMe,
@@ -79,8 +80,10 @@ export default function RegisterPage() {
       setUser(me);
 
       router.replace('/dashboard');
-    } catch (error: any) {
-      const status = error?.response?.status;
+    } catch (error: unknown) {
+      const status = axios.isAxiosError(error)
+        ? error.response?.status
+        : undefined;
 
       if (status === 409) {
         setError('email', {

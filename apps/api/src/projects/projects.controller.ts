@@ -20,39 +20,21 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 @Controller('projects')
 @UseGuards(JwtAuthGuard)
 export class ProjectsController {
-  constructor(
-    private readonly projectsService: ProjectsService,
-  ) {}
+  constructor(private readonly projectsService: ProjectsService) {}
 
   @Get()
-  findAll(
-    @CurrentUser() user: { id: string },
-  ) {
-    return this.projectsService.findAll(
-      user.id,
-    );
+  findAll(@CurrentUser() user: { id: string }) {
+    return this.projectsService.findAll(user.id);
   }
 
   @Get(':id')
-  findOne(
-    @CurrentUser() user: { id: string },
-    @Param('id') projectId: string,
-  ) {
-    return this.projectsService.findOne(
-      user.id,
-      projectId,
-    );
+  findOne(@CurrentUser() user: { id: string }, @Param('id') projectId: string) {
+    return this.projectsService.findOne(user.id, projectId);
   }
 
   @Post()
-  create(
-    @CurrentUser() user: { id: string },
-    @Body() dto: CreateProjectDto,
-  ) {
-    return this.projectsService.create(
-      user.id,
-      dto,
-    );
+  create(@CurrentUser() user: { id: string }, @Body() dto: CreateProjectDto) {
+    return this.projectsService.create(user.id, dto);
   }
 
   @Patch(':id')
@@ -61,21 +43,11 @@ export class ProjectsController {
     @Param('id') projectId: string,
     @Body() dto: UpdateProjectDto,
   ) {
-    return this.projectsService.update(
-      user.id,
-      projectId,
-      dto,
-    );
+    return this.projectsService.update(user.id, projectId, dto);
   }
 
   @Delete(':id')
-  remove(
-    @CurrentUser() user: { id: string },
-    @Param('id') projectId: string,
-  ) {
-    return this.projectsService.remove(
-      user.id,
-      projectId,
-    );
+  remove(@CurrentUser() user: { id: string }, @Param('id') projectId: string) {
+    return this.projectsService.remove(user.id, projectId);
   }
 }

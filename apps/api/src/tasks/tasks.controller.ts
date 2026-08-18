@@ -21,41 +21,24 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 @Controller('tasks')
 @UseGuards(JwtAuthGuard)
 export class TasksController {
-  constructor(
-    private readonly tasksService: TasksService,
-  ) {}
+  constructor(private readonly tasksService: TasksService) {}
 
   @Get()
   findAll(
     @CurrentUser() user: { id: string },
     @Query('projectId') projectId: string,
   ) {
-    return this.tasksService.findAll(
-      user.id,
-      projectId,
-    );
+    return this.tasksService.findAll(user.id, projectId);
   }
 
   @Get(':id')
-  findOne(
-    @CurrentUser() user: { id: string },
-    @Param('id') taskId: string,
-  ) {
-    return this.tasksService.findOne(
-      user.id,
-      taskId,
-    );
+  findOne(@CurrentUser() user: { id: string }, @Param('id') taskId: string) {
+    return this.tasksService.findOne(user.id, taskId);
   }
 
   @Post()
-  create(
-    @CurrentUser() user: { id: string },
-    @Body() dto: CreateTaskDto,
-  ) {
-    return this.tasksService.create(
-      user.id,
-      dto,
-    );
+  create(@CurrentUser() user: { id: string }, @Body() dto: CreateTaskDto) {
+    return this.tasksService.create(user.id, dto);
   }
 
   @Patch(':id')
@@ -64,21 +47,11 @@ export class TasksController {
     @Param('id') taskId: string,
     @Body() dto: UpdateTaskDto,
   ) {
-    return this.tasksService.update(
-      user.id,
-      taskId,
-      dto,
-    );
+    return this.tasksService.update(user.id, taskId, dto);
   }
 
   @Delete(':id')
-  remove(
-    @CurrentUser() user: { id: string },
-    @Param('id') taskId: string,
-  ) {
-    return this.tasksService.remove(
-      user.id,
-      taskId,
-    );
+  remove(@CurrentUser() user: { id: string }, @Param('id') taskId: string) {
+    return this.tasksService.remove(user.id, taskId);
   }
 }
