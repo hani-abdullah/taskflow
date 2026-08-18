@@ -17,6 +17,12 @@ enum TaskStatus {
   DONE
 }
 
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 enum NotificationType {
   TASK_ASSIGNED
   TASK_COMPLETED
@@ -25,11 +31,14 @@ enum NotificationType {
 }
 
 enum SubscriptionStatus {
-  ACTIVE
-  CANCELED
-  PAST_DUE
-  TRIALING
   INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
 }
 
 model User {
@@ -49,7 +58,7 @@ model User {
   assignedTasks Task[]    @relation("TaskAssignee")
 
   notifications Notification[]
-  subscriptions Subscription[]
+  subscription  Subscription?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -137,12 +146,6 @@ model Task {
   @@index([assigneeId])
 }
 
-enum TaskPriority {
-  LOW
-  MEDIUM
-  HIGH
-}
-
 model Notification {
   id     String @id @default(cuid())
   userId String
@@ -164,20 +167,28 @@ model Notification {
 }
 
 model Subscription {
-  id                     String             @id @default(cuid())
-  status                 SubscriptionStatus
-  provider               String
-  providerCustomerId     String?
-  providerSubscriptionId String?
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String             @unique
+  status               SubscriptionStatus
+  priceId              String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId String
+  @@index([status])
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model StripeWebhookEvent {
+  id            String    @id @default(cuid())
+  stripeEventId String    @unique
+  type          String
+  processedAt   DateTime?
+  createdAt     DateTime  @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([providerCustomerId])
-  @@index([providerSubscriptionId])
+  @@index([type])
 }

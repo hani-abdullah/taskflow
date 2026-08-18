@@ -4,8 +4,8 @@ import EmotionRegistry from './EmotionRegistry';
 import { AppProviders } from '@/providers/app-providers';
 
 export const metadata: Metadata = {
-  title: 'TaskFlow',
-  description: 'TaskFlow project management application',
+  title: { default: 'Taskflow — Make space for great work', template: '%s · Taskflow' },
+  description: 'A calm, clear workspace for planning projects, focusing your team, and moving every idea forward.',
 };
 
 export default function RootLayout({

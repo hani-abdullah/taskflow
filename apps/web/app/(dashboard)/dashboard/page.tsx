@@ -1,21 +1,12 @@
 'use client';
-
-import { Container, Typography } from '@mui/material';
-
+import Link from 'next/link';
+import { Avatar, AvatarGroup, Box, Button, Chip, Grid, LinearProgress, Stack, Typography } from '@mui/material';
+import { ArrowForward, CheckCircle, MoreHoriz, TrendingUp } from '@mui/icons-material';
 import { useAuthStore } from '@/stores/auth.store';
-
-export default function DashboardPage() {
-  const user = useAuthStore((state) => state.user);
-
-  return (
-    <Container sx={{ py: 6 }}>
-      <Typography variant="h3">
-        Dashboard
-      </Typography>
-
-      <Typography color="text.secondary">
-        Welcome back{user ? `, ${user.firstName}` : ''}.
-      </Typography>
-    </Container>
-  );
-}
+const tasks = [['Finalize launch copy','Website launch','Today','#f1a7ce'],['Review onboarding flow','Product sprint','Tomorrow','#a9d7ff'],['Share research summary','User research','Fri','#ffd074']];
+export default function DashboardPage() { const user = useAuthStore(s => s.user); return <Stack spacing={3.5} sx={{ maxWidth: 1240, mx: 'auto' }}>
+  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { sm: 'end' } }}><Box><Typography sx={{ color: '#69736c', fontWeight: 700 }}>Tuesday, August 18</Typography><Typography variant="h3" sx={{ mt: .5, fontSize: { xs: '2.25rem', md: '3rem' } }}>Good afternoon{user ? `, ${user.firstName}` : ''}.</Typography><Typography sx={{ color: '#69736c', mt: 1 }}>Here’s where your team is making progress today.</Typography></Box><Button component={Link} href="/projects" endIcon={<ArrowForward />}>View all projects</Button></Stack>
+  <Grid container spacing={2}>{[['Tasks completed','24','+18%','#dfff3f'],['Active projects','6','2 due soon','#a9d7ff'],['Team focus','87%','Strong week','#f1a7ce']].map(([label,value,note,color]) => <Grid key={label} size={{ xs: 12, sm: 4 }}><Box sx={{ bgcolor: '#fff', border: '1px solid #e2e5dd', borderRadius: 3, p: 2.5 }}><Stack direction="row" sx={{ justifyContent: 'space-between' }}><Typography sx={{ color: '#69736c', fontWeight: 700, fontSize: 14 }}>{label}</Typography><Box sx={{ width: 12, height: 12, bgcolor: color, borderRadius: '50%' }} /></Stack><Typography sx={{ fontSize: 36, fontWeight: 950, letterSpacing: '-.06em', my: 1 }}>{value}</Typography><Typography sx={{ color: '#607067', fontSize: 13 }}>{note}</Typography></Box></Grid>)}</Grid>
+  <Grid container spacing={2}><Grid size={{ xs: 12, lg: 8 }}><Box sx={{ bgcolor: '#fff', border: '1px solid #e2e5dd', borderRadius: 3, p: { xs: 2, md: 3 }, height: '100%' }}><Stack direction="row" sx={{ justifyContent: 'space-between', mb: 3 }}><Box><Typography variant="h5">Your priorities</Typography><Typography sx={{ color: '#69736c', fontSize: 14 }}>3 tasks need your attention</Typography></Box><MoreHoriz /></Stack>{tasks.map(([title,project,due,color],i) => <Stack key={title} direction="row" spacing={2} sx={{ alignItems: 'center', py: 2, borderTop: i ? '1px solid #edf0e9' : 'none' }}><CheckCircle sx={{ color: i === 0 ? '#577863' : '#ccd2cd' }} /><Box sx={{ flex: 1 }}><Typography sx={{ fontWeight: 850 }}>{title}</Typography><Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}><Box sx={{ width: 7, height: 7, borderRadius: '50%', bgcolor: color }} /><Typography sx={{ color: '#69736c', fontSize: 13 }}>{project}</Typography></Stack></Box><Chip label={due} size="small" sx={{ bgcolor: '#f1f3ed', fontWeight: 800 }} /></Stack>)}</Box></Grid>
+  <Grid size={{ xs: 12, lg: 4 }}><Box sx={{ bgcolor: '#17211b', color: '#fff', borderRadius: 3, p: 3, height: '100%' }}><Stack direction="row" sx={{ justifyContent: 'space-between' }}><Box><Typography sx={{ color: '#9ba79f', fontSize: 13, fontWeight: 800 }}>SPRINT HEALTH</Typography><Typography variant="h5" sx={{ color: '#fff', mt: .5 }}>Ahead of pace</Typography></Box><TrendingUp sx={{ color: '#dfff3f' }} /></Stack><Typography sx={{ fontSize: 46, fontWeight: 950, mt: 4 }}>72%</Typography><LinearProgress value={72} variant="determinate" sx={{ height: 8, borderRadius: 5, bgcolor: '#344139', '& .MuiLinearProgress-bar': { bgcolor: '#dfff3f' } }} /><Typography sx={{ color: '#aeb8b1', fontSize: 13, mt: 1.5 }}>36 of 50 tasks completed</Typography><Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mt: 5 }}><AvatarGroup>{['A','M','J'].map((x,i)=><Avatar key={x} sx={{ width: 32, height: 32, bgcolor: ['#f1a7ce','#a9d7ff','#ffd074'][i], color:'#17211b' }}>{x}</Avatar>)}</AvatarGroup><Typography sx={{ color: '#dfff3f', fontSize: 13 }}>8 teammates</Typography></Stack></Box></Grid></Grid>
+</Stack> }

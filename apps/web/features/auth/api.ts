@@ -58,3 +58,10 @@ export async function getMe(): Promise<AuthUser> {
 
   return response.data;
 }
+
+export async function forgotPassword(email: string): Promise<{ success: boolean }> {
+  const response = await api.post<{ success: boolean }>('/auth/forgot-password', {
+    email,
+  });
+  return response.data;
+}

@@ -12,6 +12,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { BillingModule } from './billing/billing.module';
 import { EmailModule } from './email/email.module';
 import { QueuesModule } from './queues/queues.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -38,6 +39,8 @@ import { QueuesModule } from './queues/queues.module';
     EmailModule,
 
     QueuesModule,
+
+    StripeModule,
   ],
 
   controllers: [AppController],

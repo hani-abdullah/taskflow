@@ -34,4 +34,18 @@ export const envValidationSchema = Joi.object({
   SMTP_PASSWORD: Joi.string().allow('').default(''),
 
   SMTP_SECURE: Joi.boolean().default(false),
+
+  STRIPE_SECRET_KEY: Joi.string().allow('').default(''),
+
+  STRIPE_WEBHOOK_SECRET: Joi.string().allow('').default(''),
+
+  STRIPE_PRICE_ID: Joi.string().allow('').default(''),
+
+  STRIPE_SUCCESS_URL: Joi.string()
+    .uri()
+    .default('http://localhost:3000/billing/success'),
+
+  STRIPE_CANCEL_URL: Joi.string()
+    .uri()
+    .default('http://localhost:3000/billing/cancel'),
 });
