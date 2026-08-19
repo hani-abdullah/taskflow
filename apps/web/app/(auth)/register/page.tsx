@@ -9,13 +9,12 @@ import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
   CircularProgress,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
+import { color } from '@/theme/tokens';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -111,46 +110,27 @@ export default function RegisterPage() {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: { xs: 'auto', md: '100vh' },
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        px: 2,
+        px: { xs: 3, md: 4 },
         py: 6,
-        bgcolor: 'background.default',
       }}
     >
-      <Card
-        elevation={3}
-        sx={{
-          width: '100%',
-          maxWidth: 460,
-          borderRadius: 3,
-        }}
-      >
-        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack
             component="form"
             spacing={2.5}
             onSubmit={handleSubmit(onSubmit)}
+            sx={{ width: '100%', maxWidth: 460 }}
           >
-            {/* Header */}
-
             <Box sx={{ mb: 1 }}>
-              <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                sx={{fontWeight: 700}}
-              >
+              <Typography variant="h3" component="h1">
                 Create your account
               </Typography>
 
-              <Typography
-                variant="body2"
-                color="text.secondary"
-              >
-                Get started with TaskFlow today.
+              <Typography sx={{ color: color.stone, mt: 1 }}>
+                Start a Taskflow workspace in a few minutes.
               </Typography>
             </Box>
 
@@ -261,8 +241,7 @@ export default function RegisterPage() {
 
             <Typography
               variant="body2"
-              color="text.secondary"
-              sx={{ pt: 1, textAlign: 'center' }}
+              sx={{ pt: 1, textAlign: 'center', color: color.stone }}
             >
               Already have an account?{' '}
 
@@ -270,21 +249,16 @@ export default function RegisterPage() {
                 component={Link}
                 href="/login"
                 sx={{
-                  color: 'primary.main',
+                  color: color.forest,
                   fontWeight: 600,
                   textDecoration: 'none',
-
-                  '&:hover': {
-                    textDecoration: 'underline',
-                  },
+                  '&:hover': { textDecoration: 'underline' },
                 }}
               >
                 Sign in
               </Box>
             </Typography>
           </Stack>
-        </CardContent>
-      </Card>
     </Box>
   );
 }

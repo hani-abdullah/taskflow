@@ -1,48 +1,153 @@
 import { createTheme } from '@mui/material/styles';
+import { color, shadow } from './tokens';
 
 export const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#263b2e', light: '#4c6756', dark: '#17211b', contrastText: '#ffffff',
+      main: color.forest,
+      light: color.moss,
+      dark: color.forestHover,
+      contrastText: color.white,
     },
     secondary: {
-      main: '#dfff3f',
+      main: color.chartreuse,
+      contrastText: color.ink,
     },
     background: {
-      default: '#f6f7f2',
-      paper: '#ffffff',
+      default: color.paper,
+      paper: color.white,
     },
     text: {
-      primary: '#17211b', secondary: '#69736c',
+      primary: color.ink,
+      secondary: color.stone,
     },
+    divider: color.line,
+    success: { main: color.moss },
+    warning: { main: color.terracotta },
   },
   typography: {
-    fontFamily: 'var(--font-geist-sans), Arial, sans-serif',
-    h1: { fontWeight: 800, letterSpacing: '-0.06em' },
-    h2: { fontWeight: 800, letterSpacing: '-0.06em' },
-    h3: { fontWeight: 800, letterSpacing: '-0.06em' },
-    h4: { fontWeight: 800, letterSpacing: '-0.04em' },
-    h5: { fontWeight: 700 },
-    h6: { fontWeight: 700 },
+    fontFamily: 'var(--font-sans), Outfit, Arial, sans-serif',
+    h1: {
+      fontFamily: 'var(--font-display), Fraunces, Georgia, serif',
+      fontWeight: 500,
+      fontSize: '4.25rem',
+      lineHeight: 1.05,
+      letterSpacing: '-0.03em',
+    },
+    h2: {
+      fontFamily: 'var(--font-display), Fraunces, Georgia, serif',
+      fontWeight: 500,
+      fontSize: '3.25rem',
+      lineHeight: 1.1,
+      letterSpacing: '-0.03em',
+    },
+    h3: {
+      fontFamily: 'var(--font-display), Fraunces, Georgia, serif',
+      fontWeight: 500,
+      fontSize: '2.35rem',
+      lineHeight: 1.15,
+      letterSpacing: '-0.02em',
+    },
+    h4: {
+      fontFamily: 'var(--font-display), Fraunces, Georgia, serif',
+      fontWeight: 500,
+      fontSize: '1.85rem',
+      lineHeight: 1.2,
+    },
+    h5: {
+      fontFamily: 'var(--font-sans), Outfit, sans-serif',
+      fontWeight: 600,
+      fontSize: '1.25rem',
+      lineHeight: 1.3,
+      letterSpacing: '-0.02em',
+    },
+    h6: {
+      fontFamily: 'var(--font-sans), Outfit, sans-serif',
+      fontWeight: 600,
+      fontSize: '1.05rem',
+      lineHeight: 1.35,
+    },
+    body1: { fontSize: '1.0625rem', lineHeight: 1.65 },
+    body2: { fontSize: '0.9375rem', lineHeight: 1.6 },
+    button: { fontWeight: 600, letterSpacing: '-0.01em' },
   },
-  shape: {
-    borderRadius: 16,
-  },
+  shape: { borderRadius: 2 },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: { backgroundColor: color.paper, color: color.ink },
+      },
+    },
     MuiButton: {
+      defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
           textTransform: 'none',
-          borderRadius: 10, fontWeight: 800,
+          borderRadius: 4,
+          fontWeight: 600,
+          paddingInline: 20,
+          minHeight: 44,
+          transition: 'transform .2s ease, background-color .2s ease, box-shadow .2s ease',
+          '&:hover': { transform: 'translateY(-1px)' },
+          '&:focus-visible': {
+            outline: `2px solid ${color.forest}`,
+            outlineOffset: 3,
+          },
         },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': { boxShadow: shadow.soft },
+        },
+        outlined: {
+          borderColor: color.line,
+          color: color.ink,
+          '&:hover': { borderColor: color.ink, background: color.white },
+        },
+        sizeLarge: { minHeight: 52, paddingInline: 24, fontSize: '1rem' },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: '0 10px 30px rgba(23,33,27,.06)', border: '1px solid #e2e5dd',
+          boxShadow: 'none',
+          border: `1px solid ${color.line}`,
+          backgroundImage: 'none',
+          backgroundColor: color.white,
         },
+      },
+    },
+    MuiTextField: {
+      defaultProps: { variant: 'outlined' },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+          backgroundColor: color.white,
+          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: color.moss },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: color.forest, borderWidth: 1.5 },
+        },
+        notchedOutline: { borderColor: color.line },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: { fontWeight: 600, borderRadius: 4 },
+      },
+    },
+    MuiAccordion: {
+      styleOverrides: {
+        root: {
+          background: 'transparent',
+          boxShadow: 'none',
+          '&:before': { display: 'none' },
+        },
+      },
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: { color: color.forest },
       },
     },
   },

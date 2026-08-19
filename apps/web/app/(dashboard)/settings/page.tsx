@@ -1,2 +1,40 @@
 import { Box, Button, Divider, Stack, Switch, TextField, Typography } from '@mui/material';
-export default function SettingsPage(){return <Stack spacing={3} sx={{maxWidth:820,mx:'auto'}}><Box><Typography variant="h3">Settings</Typography><Typography color="text.secondary">Manage your profile and workspace preferences.</Typography></Box><Box sx={{bgcolor:'#fff',border:'1px solid #e2e5dd',borderRadius:3,p:{xs:2,md:3}}}><Typography variant="h5">Profile</Typography><Typography color="text.secondary" sx={{mb:3}}>How you appear across Taskflow.</Typography><Stack spacing={2}><Stack direction={{xs:'column',sm:'row'}} spacing={2}><TextField label="First name" defaultValue="Alex" fullWidth/><TextField label="Last name" defaultValue="Morgan" fullWidth/></Stack><TextField label="Email" defaultValue="alex@example.com" fullWidth/><Button variant="contained" sx={{alignSelf:'flex-start'}}>Save changes</Button></Stack><Divider sx={{my:4}}/><Typography variant="h5">Notifications</Typography>{[['Task assignments','When someone assigns work to you'],['Project updates','Important changes in your projects'],['Weekly digest','A concise summary every Monday']].map(([title,body],i)=><Stack key={title} direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center',py:1.5}}><Box><Typography sx={{fontWeight:800}}>{title}</Typography><Typography sx={{color:'#69736c',fontSize:14}}>{body}</Typography></Box><Switch defaultChecked={i<2}/></Stack>)}</Box></Stack>}
+import { color } from '@/theme/tokens';
+
+export default function SettingsPage() {
+  return (
+    <Stack spacing={3} sx={{ maxWidth: 820, mx: 'auto' }}>
+      <Box>
+        <Typography variant="h3">Settings</Typography>
+        <Typography color="text.secondary">Manage your profile and workspace preferences.</Typography>
+      </Box>
+      <Box sx={{ bgcolor: color.white, border: `1px solid ${color.line}`, borderRadius: 3, p: { xs: 2, md: 3 } }}>
+        <Typography variant="h5">Profile</Typography>
+        <Typography color="text.secondary" sx={{ mb: 3 }}>How you appear across Taskflow.</Typography>
+        <Stack spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <TextField label="First name" defaultValue="Alex" fullWidth />
+            <TextField label="Last name" defaultValue="Morgan" fullWidth />
+          </Stack>
+          <TextField label="Email" defaultValue="alex@example.com" fullWidth />
+          <Button variant="contained" sx={{ alignSelf: 'flex-start' }}>Save changes</Button>
+        </Stack>
+        <Divider sx={{ my: 4 }} />
+        <Typography variant="h5">Notifications</Typography>
+        {[
+          ['Task assignments', 'When someone assigns work to you'],
+          ['Project updates', 'Important changes in your projects'],
+          ['Weekly digest', 'A concise summary every Monday'],
+        ].map(([title, body], i) => (
+          <Stack key={title} direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', py: 1.5 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 700 }}>{title}</Typography>
+              <Typography sx={{ color: color.stone, fontSize: 14 }}>{body}</Typography>
+            </Box>
+            <Switch defaultChecked={i < 2} />
+          </Stack>
+        ))}
+      </Box>
+    </Stack>
+  );
+}

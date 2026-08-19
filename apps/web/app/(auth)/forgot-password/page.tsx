@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowBack, MarkEmailReadOutlined } from '@mui/icons-material';
-import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { forgotPassword } from '@/features/auth/api';
+import { color } from '@/theme/tokens';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -38,54 +39,52 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2 }}>
-      <Card sx={{ width: '100%', maxWidth: 440 }}>
-        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-          {sent ? (
-            <Stack spacing={3} sx={{ textAlign: 'center', alignItems: 'center' }}>
-              <MarkEmailReadOutlined color="primary" sx={{ fontSize: 56 }} />
-              <Box>
-                <Typography variant="h4">Check your email</Typography>
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  If an account exists for that address, we sent password reset instructions.
-                </Typography>
-              </Box>
-              <Alert severity="info" sx={{ textAlign: 'left' }}>
-                The message may take a few minutes. Remember to check your spam folder.
-              </Alert>
-              <Button component={Link} href="/login" startIcon={<ArrowBack />}>
-                Back to sign in
-              </Button>
-            </Stack>
-          ) : (
-            <Stack component="form" spacing={3} onSubmit={handleSubmit(onSubmit)}>
-              <Box>
-                <Typography variant="h4">Forgot your password?</Typography>
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  Enter your email and we will send you reset instructions.
-                </Typography>
-              </Box>
-              {errors.root ? <Alert severity="error">{errors.root.message}</Alert> : null}
-              <TextField
-                label="Email"
-                type="email"
-                autoComplete="email"
-                autoFocus
-                fullWidth
-                {...register('email')}
-                error={Boolean(errors.email)}
-                helperText={errors.email?.message}
-              />
-              <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
-                {isSubmitting ? 'Sending...' : 'Send reset instructions'}
-              </Button>
-              <Button component={Link} href="/login" startIcon={<ArrowBack />}>
-                Back to sign in
-              </Button>
-            </Stack>
-          )}
-        </CardContent>
-      </Card>
+    <Box sx={{ minHeight: { xs: 'auto', md: '100vh' }, display: 'grid', placeItems: 'center', p: { xs: 3, md: 4 } }}>
+      <Box sx={{ width: '100%', maxWidth: 440 }}>
+        {sent ? (
+          <Stack spacing={3}>
+            <MarkEmailReadOutlined sx={{ fontSize: 48, color: color.moss }} />
+            <Box>
+              <Typography variant="h3">Check your email</Typography>
+              <Typography sx={{ color: color.stone, mt: 1 }}>
+                If an account exists for that address, we sent password reset instructions.
+              </Typography>
+            </Box>
+            <Alert severity="info">
+              The message may take a few minutes. Remember to check your spam folder.
+            </Alert>
+            <Button component={Link} href="/login" startIcon={<ArrowBack />}>
+              Back to sign in
+            </Button>
+          </Stack>
+        ) : (
+          <Stack component="form" spacing={3} onSubmit={handleSubmit(onSubmit)}>
+            <Box>
+              <Typography variant="h3">Forgot your password?</Typography>
+              <Typography sx={{ color: color.stone, mt: 1 }}>
+                Enter your email and we will send you reset instructions.
+              </Typography>
+            </Box>
+            {errors.root ? <Alert severity="error">{errors.root.message}</Alert> : null}
+            <TextField
+              label="Email"
+              type="email"
+              autoComplete="email"
+              autoFocus
+              fullWidth
+              {...register('email')}
+              error={Boolean(errors.email)}
+              helperText={errors.email?.message}
+            />
+            <Button type="submit" variant="contained" size="large" disabled={isSubmitting}>
+              {isSubmitting ? 'Sending...' : 'Send reset instructions'}
+            </Button>
+            <Button component={Link} href="/login" startIcon={<ArrowBack />}>
+              Back to sign in
+            </Button>
+          </Stack>
+        )}
+      </Box>
     </Box>
   );
 }

@@ -1,15 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f6f7f2;
-  --foreground: #17211b;
+  --paper: #F4F0E8;
+  --cream: #FAF7F1;
+  --white: #FFFDF8;
+  --ink: #161410;
+  --forest: #1C3D2E;
+  --moss: #2A5A42;
+  --chartreuse: #D4F562;
+  --stone: #6F6A62;
+  --line: #E4DDD2;
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
 html {
@@ -19,17 +26,145 @@ html {
 body {
   margin: 0;
   min-height: 100vh;
-  background: #f6f7f2;
-  color: var(--foreground);
-  font-family: "Inter", "Avenir Next", Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(1200px 500px at 80% -10%, rgba(212, 245, 98, 0.18), transparent 55%),
+    radial-gradient(900px 420px at -10% 20%, rgba(28, 61, 46, 0.08), transparent 50%),
+    var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans), Outfit, Arial, Helvetica, sans-serif;
+}
+
+body::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 a {
   text-decoration: none;
+  color: inherit;
 }
 
 * {
   box-sizing: border-box;
 }
 
-::selection { background: #dfff3f; color: #17211b; }
+::selection {
+  background: var(--chartreuse);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--forest);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -48px;
+  z-index: 100;
+  background: var(--ink);
+  color: var(--white);
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+.eyebrow {
+  color: var(--moss) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase;
+}
+
+.display {
+  font-family: var(--font-display), Fraunces, Georgia, serif;
+}
+
+.product-frame {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--white);
+  box-shadow: 0 40px 90px rgba(22, 20, 16, 0.12);
+  overflow: hidden;
+}
+
+.product-frame::after {
+  content: "";
+  position: absolute;
+  inset: auto 12% -18% 12%;
+  height: 40%;
+  background: radial-gradient(closest-side, rgba(28, 61, 46, 0.18), transparent);
+  pointer-events: none;
+}
+
+.feature-card {
+  height: 100%;
+  min-height: 280px;
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.28s ease, box-shadow 0.28s ease, border-color 0.28s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(28, 61, 46, 0.22);
+  box-shadow: 0 24px 50px rgba(22, 20, 16, 0.08);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.marquee-track {
+  display: flex;
+  gap: 56px;
+  width: max-content;
+  animation: marquee 36s linear infinite;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 600px) {
+  .feature-card { min-height: 240px; padding: 24px; }
+  .product-frame { border-radius: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; }
+  .marquee-track { animation: none; }
+  .feature-card:hover { transform: none; }
+}
