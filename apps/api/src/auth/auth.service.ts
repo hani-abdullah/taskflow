@@ -14,6 +14,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { generateSecureToken, hashToken } from './utils/token.util';
 import { QueueService } from '../queues/queue.service';
+import type { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -59,7 +60,7 @@ export class AuthService {
       `,
     });
 
-    return this.createAuthResponse(user.id, user.email);
+    return this.createAuthResponse(user.id, user.email, user.role);
   }
 
   async login(dto: LoginDto) {
@@ -79,7 +80,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.createAuthResponse(user.id, user.email);
+    return this.createAuthResponse(user.id, user.email, user.role);
   }
 
   async getCurrentUser(userId: string) {
@@ -101,11 +102,16 @@ export class AuthService {
     return user;
   }
 
-  private async createAuthResponse(userId: string, email: string) {
+  private async createAuthResponse(
+    userId: string,
+    email: string,
+    role: UserRole,
+  ) {
     const accessToken = await this.jwtService.signAsync(
       {
         sub: userId,
         email,
+        role,
         type: 'access',
       },
       {
@@ -183,6 +189,7 @@ export class AuthService {
     return this.createAuthResponse(
       matchedSession.user.id,
       matchedSession.user.email,
+      matchedSession.user.role,
     );
   }
   async logout(refreshToken: string) {

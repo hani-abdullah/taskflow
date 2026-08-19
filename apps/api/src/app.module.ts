@@ -13,6 +13,10 @@ import { BillingModule } from './billing/billing.module';
 import { EmailModule } from './email/email.module';
 import { QueuesModule } from './queues/queues.module';
 import { StripeModule } from './stripe/stripe.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { AdminModule } from './admin/admin.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -23,6 +27,8 @@ import { StripeModule } from './stripe/stripe.module';
     }),
 
     PrismaModule,
+
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
 
     AuthModule,
 
@@ -41,8 +47,11 @@ import { StripeModule } from './stripe/stripe.module';
     QueuesModule,
 
     StripeModule,
+    AdminModule,
+    AuditModule,
   ],
 
   controllers: [AppController],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

@@ -6,16 +6,18 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { QueueService } from '../queues/queue.service';
 import { NotificationType } from '@prisma/client';
+import { ProjectAccessService } from '../projects/project-access.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly queueService: QueueService,
+    private readonly projectAccess: ProjectAccessService,
   ) {}
 
   async findAll(userId: string, projectId: string) {
-    await this.ensureProjectOwnership(userId, projectId);
+    await this.projectAccess.assertMember(projectId, userId);
 
     return this.prisma.task.findMany({
       where: {
@@ -38,12 +40,9 @@ export class TasksService {
   }
 
   async findOne(userId: string, taskId: string) {
-    const task = await this.prisma.task.findFirst({
+    const task = await this.prisma.task.findUnique({
       where: {
         id: taskId,
-        project: {
-          userId,
-        },
       },
       include: {
         assignee: {
@@ -61,11 +60,13 @@ export class TasksService {
       throw new NotFoundException('Task not found');
     }
 
+    await this.projectAccess.assertMember(task.projectId, userId);
+
     return task;
   }
 
   async create(userId: string, dto: CreateTaskDto) {
-    await this.ensureProjectOwnership(userId, dto.projectId);
+    await this.projectAccess.assertMember(dto.projectId, userId);
 
     const assignee = dto.assigneeId
       ? await this.ensureUserExists(dto.assigneeId)
@@ -92,6 +93,7 @@ export class TasksService {
 
   async update(userId: string, taskId: string, dto: UpdateTaskDto) {
     const existingTask = await this.findOne(userId, taskId);
+    await this.projectAccess.assertOwner(existingTask.projectId, userId);
 
     const assignee = dto.assigneeId
       ? await this.ensureUserExists(dto.assigneeId)
@@ -115,7 +117,8 @@ export class TasksService {
   }
 
   async remove(userId: string, taskId: string) {
-    await this.findOne(userId, taskId);
+    const task = await this.findOne(userId, taskId);
+    await this.projectAccess.assertOwner(task.projectId, userId);
 
     await this.prisma.task.delete({
       where: {
@@ -126,21 +129,6 @@ export class TasksService {
     return {
       success: true,
     };
-  }
-
-  private async ensureProjectOwnership(userId: string, projectId: string) {
-    const project = await this.prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId,
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
-
-    return project;
   }
 
   private async ensureUserExists(userId: string) {

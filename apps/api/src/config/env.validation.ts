@@ -17,7 +17,7 @@ export const envValidationSchema = Joi.object({
 
   JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
 
-  FRONTEND_URL: Joi.string().uri().required(),
+  WEB_URL: Joi.string().uri().default('http://localhost:3000'),
 
   REDIS_HOST: Joi.string().default('localhost'),
 

@@ -11,7 +11,7 @@ export class ProjectsService {
   async findAll(userId: string) {
     return this.prisma.project.findMany({
       where: {
-        userId,
+        members: { some: { userId } },
       },
       include: {
         _count: {
@@ -26,11 +26,10 @@ export class ProjectsService {
     });
   }
 
-  async findOne(userId: string, projectId: string) {
-    const project = await this.prisma.project.findFirst({
+  async findOne(projectId: string) {
+    const project = await this.prisma.project.findUnique({
       where: {
         id: projectId,
-        userId,
       },
       include: {
         tasks: {
@@ -54,22 +53,12 @@ export class ProjectsService {
         name: dto.name,
         description: dto.description,
         userId,
+        members: { create: { userId } },
       },
     });
   }
 
-  async update(userId: string, projectId: string, dto: UpdateProjectDto) {
-    const project = await this.prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId,
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
-
+  async update(projectId: string, dto: UpdateProjectDto) {
     return this.prisma.project.update({
       where: {
         id: projectId,
@@ -78,18 +67,7 @@ export class ProjectsService {
     });
   }
 
-  async remove(userId: string, projectId: string) {
-    const project = await this.prisma.project.findFirst({
-      where: {
-        id: projectId,
-        userId,
-      },
-    });
-
-    if (!project) {
-      throw new NotFoundException('Project not found');
-    }
-
+  async remove(projectId: string) {
     await this.prisma.project.delete({
       where: {
         id: projectId,
